@@ -260,6 +260,12 @@ class db_User
         $this->user_type = $user_type;
         $this->table_id = $table_id;
     }
+    
+    function update_info($email, $password)
+    {
+        $this->password = $password;
+        $this->email = $email;
+    }
 
     function get_id(){return $this->id;}
     function get_username(){return $this->username;}
