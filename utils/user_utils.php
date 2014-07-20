@@ -26,7 +26,8 @@ class User {
         
         if($this->session_id == NULL)
         {
-        //message user unable to login
+            echo("Unable to login");
+        	//message user unable to login
         }
         else $this->user_info = new db_User($this->session_id);
         
@@ -86,7 +87,7 @@ class User {
     function is_logined()
     {
         //checks session variables
-        if($this->session != NULL) return true;
+        if($this->session_id != NULL) return true;
         return false;
     }
 
@@ -100,8 +101,9 @@ class User {
     function update_profile($email, $password)
     {
         Global $Linker;    
-        if(is_logined())
+        if($this->is_logined())
         {
+        echo("HERE");
             $this->user_info->update_info($email, $password);
         
             $query = "UPDATE Users
@@ -113,45 +115,24 @@ class User {
         }
     }
     
-    function update_student($id, $u_ID, $name, $surname, $telephone, $semester, $department)
+    function update_student($u_ID, $name, $surname, $telephone, $semester, $department)
     {
-        $this->class_type_info->udate_info($id, $u_ID, $name, $surname, $telephone, $semester, $department);
+        $this->class_type_info->update_info($this->get_student_info("id"), $u_ID, $name, $surname, $telephone, $semester, $department);
     }
 
     function get_user_type(){return $this->user_info->get_user_type();}
     
     function get_user($type_of_info)
     {
-        if($type_of_info == "Username") return $this->user_info->get_username;
-        elseif($type_of_info == "Password") return $this->user_info->get_password;
-        elseif($type_of_info == "email") return $this->user_info->get_email;
+        if($type_of_info == "Username") return $this->user_info->get_username();
+        elseif($type_of_info == "Password") return $this->user_info->get_password();
+        elseif($type_of_info == "email") return $this->user_info->get_email();
         else return NULL;
     }
     
-    function getstudent_info($type_of_info)
+    function get_student_info($type_of_info)
     {
-        Global $Linker;
-        if($type_of_info == "University_ID") return $this->class_type_info->get_u_id;
-        elseif($type_of_info == "Name") return $this->class_type_info->get_name;
-        elseif($type_of_info == "Surname") return $this->class_type_info->get_surname;
-        elseif($type_of_info == "Telephone") return $this->class_type_info->get_telephone;
-        elseif($type_of_info == "Semester") return $this->class_type_info->get_semester;
-        elseif($type_of_info == "Department")
-        {
-            $d_id = $this->class_type_info->get_d_id;
-            $query = "SELECT Name
-                  FROM Department
-                  WHERE id = ?";
-            $stmt = mysqli_prepare($Linker->DataBase,$query);
-            mysqli_stmt_bind_param($stmt,"i",$d_id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_bind_result($department);
-            mysqli_stmt_fetch($stmt);
-            mysqli_stmt_close($stmt);
-            
-            return $department;
-        }
-        else return NULL;
+        return $this->class_type_info->get_student($type_of_info);
     }
 
     function send_mail($id){
@@ -177,7 +158,7 @@ class Student extends User {
         $stmt = mysqli_prepare($Linker->DataBase,$query);
         mysqli_stmt_bind_param($stmt,"s",$department);
         mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($d_ID);
+        mysqli_stmt_bind_result($stmt,$d_ID);
         mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
         
@@ -189,6 +170,33 @@ class Student extends User {
         $stmt = mysqli_prepare($Linker->DataBase,$query);
         mysqli_stmt_bind_param($stmt,"ssssiii",$u_ID,$name,$surname,$telephone,$semester,$d_ID,$id);
         mysqli_stmt_execute($stmt);
+    }
+    
+    function get_student($type_of_info)
+    {
+        Global $Linker;
+        if($type_of_info == "id") return $this->student_info->get_id();
+        elseif($type_of_info == "University_ID") return $this->student_info->get_u_id();
+        elseif($type_of_info == "Name") return $this->student_info->get_name();
+        elseif($type_of_info == "Surname") return $this->student_info->get_surname();
+        elseif($type_of_info == "Telephone") return $this->student_info->get_telephone();
+        elseif($type_of_info == "Semester") return $this->student_info->get_semester();
+        elseif($type_of_info == "Department")
+        {
+            $d_id = $this->class_type_info->get_d_id;
+            $query = "SELECT Name
+                  FROM Department
+                  WHERE id = ?";
+            $stmt = mysqli_prepare($Linker->DataBase,$query);
+            mysqli_stmt_bind_param($stmt,"i",$d_id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_bind_result($stmt,$department);
+            mysqli_stmt_fetch($stmt);
+            mysqli_stmt_close($stmt);
+            
+            return $department;
+        }
+        else return NULL;
     }
     
     function get_statement_history($id){
